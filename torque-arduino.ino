@@ -1,4 +1,4 @@
-#include <SoftwareSerial.h>
+#include <BluetoothSerial.h>
 #include <String.h>
 
 /**
@@ -37,8 +37,8 @@ const String ATAT = "ATAT";
 const String LF = "\n";
 const String VERSION = "Torque Protocol Interface v0.0.2"; // Don't change this - it's used by Torque so it knows what interface it is connected to
 const String VERSION_DESC = "Torque For Android Protocol Interface";
-const String OK = "OK";
-const String ANALOG = "a";
+const String STR_OK = "OK";
+const String STR_ANALOG = "a";
 const String DIGITAL = "d";
 const String IS_INPUT = "i";
 const String IS_OUTPUT = "o";
@@ -53,13 +53,13 @@ String fromTorque = "";
  *  
  *  Caveats:  Don't use a '>' in any of the names, 
  *            Update 'sensorsSize' with the number of elements.
- *            Analog outputs are PWM on digital pins.
+ *            STR_NALOG outputs are PWM on digital pins.
  *  
  */
 const String sensors[] = {
-                    "0", ANALOG, IS_INPUT,   "-",   "Pot 1", "Potentiometer 1", "v",    "0", "5",
-                    "1", ANALOG, IS_INPUT,   "-",   "LDR 1", "Light Sensor 1",  "v",    "0", "5",
-                    "4", DIGITAL,IS_OUTPUT,  "0",  "Dout1", "Digital Out 1",   "bit", "0", "1"
+                    "0", STR_ANALOG, IS_INPUT,   "-",   "Pot 1", "Potentiometer 1", "v",    "0", "5",
+                    "1", STR_ANALOG, IS_INPUT,   "-",   "LDR 1", "Light Sensor 1",  "v",    "0", "5",
+                    "4", DIGITAL,IS_OUTPUT,  "0",   "Dout1", "Digital Out 1",   "bit",  "0", "1"
                    }; 
 const int SENSORSSIZE = sizeof(sensors);
 /**
@@ -74,16 +74,16 @@ const int SENSORSSIZE = sizeof(sensors);
 const String CONFIGURATION = "NO_CAR_SENSORS,NO_DEVICE_SENSORS"; 
 
 // Setup bluetooth module on pins 2 and 3 (you can't use these digial pins in the sensor list or it'll break comms)
-SoftwareSerial mySerial(2,3); // Most other boards can use pins 2 and 3
+//SoftwareSerial mySerial(2,3); // Most other boards can use pins 2 and 3
 //SoftwareSerial mySerial(8,9); // Use pins 8,9 on Arduino Micro
-
+BluetoothSerial mySerial;
 
 void setup() {
   // Init the pins 
   initSensors();
   Serial.begin(9600);    // the GPRS baud rate 
   delay(600);
-  mySerial.begin(9600);              
+  mySerial.begin("torqueSensor");              
  }
 
 void loop() {
@@ -117,28 +117,28 @@ void processCommand(String command) {
        initSensors(); // reset the pins
        mySerial.print(VERSION);
        mySerial.print(LF); 
-       mySerial.print(OK);
+       mySerial.print(STR_OK);
    } else if (command.startsWith(ATE)) {
-       mySerial.print(OK); 
+       mySerial.print(STR_OK); 
    } else if(command.startsWith(ATI)) {
        mySerial.print(VERSION);
        mySerial.print(LF);
-       mySerial.print(OK);
+       mySerial.print(STR_OK);
    } else if (command.startsWith(ATDESC)) {
        mySerial.print(VERSION_DESC); 
        mySerial.print(LF);
-       mySerial.print(OK);
+       mySerial.print(STR_OK);
    } else if (command.startsWith(ATL)) {
-       mySerial.print(OK);
+       mySerial.print(STR_OK);
    } else if (command.startsWith(ATAT)) {
-       mySerial.print(OK);
+       mySerial.print(STR_OK);
    } else if (command.startsWith(ATH)) {
-       mySerial.print(OK);
+       mySerial.print(STR_OK);
    } else if (command.startsWith(ATM)) {
-       mySerial.print(OK);
+       mySerial.print(STR_OK);
    } else if (command.startsWith(ATS)) {
        // Set protocol
-       mySerial.print(OK);
+       mySerial.print(STR_OK);
    } else if (command.startsWith(ATDPN)) {
        mySerial.print(CANBUS);
    } else if (command.startsWith(GETDEFINITIONS)) {
@@ -193,7 +193,7 @@ void getSensorValues() {
          mySerial.print(":");
          mySerial.print(type);
          mySerial.print(":");
-         if (type.equals(ANALOG)) {
+         if (type.equals(STR_ANALOG)) {
             mySerial.print(analogRead(id));
          } else if (type.equals(DIGITAL)) {
             mySerial.print(digitalRead(id));
@@ -220,7 +220,7 @@ void setSensorValue(String command) {
        if (sid == id) {
  
           String type = sensors[group+1];
-          if (type.equals(ANALOG)) {
+          if (type.equals(STR_ANALOG)) {
             analogWrite(sid, constrain(value,0,255));
           } else if (type.equals(DIGITAL)) {
             digitalWrite(sid, value > 0 ? HIGH: LOW);
@@ -244,7 +244,7 @@ void initSensors() {
     
 
       if (isOutput) {
-         if (type.equals(ANALOG)) {
+         if (type.equals(STR_ANALOG)) {
              pinMode(id, OUTPUT);
              analogWrite(id, constrain(defaultValue, 0, 255));
          } else if (type.equals(DIGITAL)) {
